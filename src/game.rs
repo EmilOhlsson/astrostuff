@@ -4,6 +4,9 @@ use piston::input::*;
 use crate::asteroid::Asteroid;
 use crate::entity::{GameObject, Tangeable};
 
+use rand::prelude::*;
+use rand_distr::StandardNormal;
+
 const UNIT_MOVE: f64 = 0.5;
 const UNIT_TURN: f64 = std::f64::consts::PI / 16.0;
 
@@ -13,7 +16,7 @@ const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 0.0];
 pub struct App {
     gl: GlGraphics,
     player: Tangeable,
-    asteroid: Asteroid,
+    asteroids: Vec<Asteroid>,
 }
 
 impl App {
@@ -27,7 +30,15 @@ impl App {
                 dy: 0.0,
                 dir: 0.0,
             },
-            asteroid: Asteroid::new(10.0, 150.0, 150.0),
+            asteroids: (0..10)
+                .map(|_| {
+                    Asteroid::new(
+                        10.0,
+                        100.0 + thread_rng().sample::<f64, _>(StandardNormal) * 100.0,
+                        100.0 + thread_rng().sample::<f64, _>(StandardNormal) * 100.0,
+                    )
+                })
+                .collect::<Vec<_>>(),
         }
     }
 
@@ -58,12 +69,17 @@ impl App {
             player_shape.draw(&player_points, &c.draw_state, transform, gl);
         });
 
-        self.asteroid.render(&mut self.gl, args);
+        for asteroid in &mut self.asteroids {
+            asteroid.render(&mut self.gl, args);
+        }
     }
 
-    pub fn update(&mut self, _args: UpdateArgs) {
+    pub fn update(&mut self, args: UpdateArgs) {
         self.player.x += self.player.dx;
         self.player.y += self.player.dy;
+        for asteroid in &mut self.asteroids {
+            asteroid.update(&args);
+        }
     }
 
     pub fn input(&mut self, button: &Button) {
@@ -83,7 +99,6 @@ impl App {
                 Key::Right => self.player.dir += UNIT_TURN,
                 _ => (),
             }
-            println!("player: {:?}", self.player);
         }
     }
 }

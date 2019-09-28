@@ -1,4 +1,5 @@
 use opengl_graphics::GlGraphics;
+use piston::input::UpdateArgs;
 use piston::RenderArgs;
 
 #[derive(Debug)]
@@ -11,6 +12,6 @@ pub struct Tangeable {
 }
 
 pub trait GameObject {
-    fn update();
+    fn update(&mut self, args: &UpdateArgs);
     fn render(&mut self, gl: &mut GlGraphics, args: &RenderArgs);
 }

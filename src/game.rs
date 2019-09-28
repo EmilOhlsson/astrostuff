@@ -1,7 +1,8 @@
 use opengl_graphics::GlGraphics;
 use piston::input::*;
 
-use crate::entity::Entity;
+use crate::asteroid::Asteroid;
+use crate::entity::{GameObject, Tangeable};
 
 const UNIT_MOVE: f64 = 0.5;
 const UNIT_TURN: f64 = std::f64::consts::PI / 16.0;
@@ -11,20 +12,22 @@ const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 0.0];
 
 pub struct App {
     gl: GlGraphics,
-    player: Entity,
+    player: Tangeable,
+    asteroid: Asteroid,
 }
 
 impl App {
     pub fn new(gl: GlGraphics) -> App {
         App {
             gl,
-            player: Entity {
+            player: Tangeable {
                 x: 100.0,
                 y: 100.0,
                 dx: 0.0,
                 dy: 0.0,
                 dir: 0.0,
             },
+            asteroid: Asteroid::new(10.0, 150.0, 150.0),
         }
     }
 
@@ -54,6 +57,8 @@ impl App {
             let transform = c.transform.trans(x, y).rot_rad(dir).trans(-25.0, -25.0);
             player_shape.draw(&player_points, &c.draw_state, transform, gl);
         });
+
+        self.asteroid.render(&mut self.gl, args);
     }
 
     pub fn update(&mut self, _args: UpdateArgs) {

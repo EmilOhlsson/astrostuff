@@ -1,4 +1,5 @@
 use crate::entity::GameObject;
+use crate::utils::wrap;
 use graphics;
 use graphics::polygon;
 use opengl_graphics::GlGraphics;
@@ -17,6 +18,7 @@ pub struct Asteroid {
     points: Vec<[f64; 2]>,
     position: (f64, f64),
     speed: (f64, f64),
+    radius: f64,
 }
 
 impl Asteroid {
@@ -43,39 +45,47 @@ impl Asteroid {
             points,
             position: (x, y),
             speed,
+            radius,
         }
     }
 }
 
 impl GameObject for Asteroid {
-    fn update(&mut self, args: &UpdateArgs) {
-        self.position.0 += self.speed.0 * args.dt;
-        self.position.1 += self.speed.1 * args.dt;
+    fn update(&mut self, args: UpdateArgs) {
+        self.position.0 += 5.0 * self.speed.0 * args.dt;
+        self.position.1 += 5.0 * self.speed.1 * args.dt;
     }
 
     fn render(&mut self, gl: &mut GlGraphics, args: &RenderArgs) {
         use graphics::*;
+        self.position.0 = wrap(self.position.0, 0.0, args.window_size[0]);
+        self.position.1 = wrap(self.position.1, 0.0, args.window_size[1]);
         gl.draw(args.viewport(), |c, g| {
             let (x, y) = (self.position.0, self.position.1);
             let transform = c.transform.trans(x, y);
             self.poly.draw(&self.points, &c.draw_state, transform, g);
         });
     }
+
+    fn radius(&self) -> f64 {
+        self.radius
+    }
+
+    fn position(&self) -> (f64, f64) {
+        self.position
+    }
 }
 
 // Private helper functions
 
 /// Recursively fill radiuses with (rads[lo] + rads[hi]) + rnd
-fn fill_points(
-    rads: &mut [f64],
-    rng: &mut rand::rngs::ThreadRng,
-    lo: usize,
-    hi: usize,
-) {
+fn fill_points(rads: &mut [f64], rng: &mut rand::rngs::ThreadRng, lo: usize, hi: usize) {
+    // This could be generalized and used to create explosions as well.
+    // Just take a closure as parameter
     if hi - lo > 1 {
         let mid = (lo + hi) / 2;
         let mid_val = (rads[lo] + rads[hi % RESOLUTION]) / 2.0;
-        rads[mid] = mid_val + rng.sample::<f64, _>(StandardNormal);
+        rads[mid] = mid_val + rng.sample::<f64, _>(StandardNormal) * 10.0;
         fill_points(rads, rng, lo, mid);
         fill_points(rads, rng, mid, hi);
     }

@@ -4,7 +4,7 @@ use piston::event_loop::*;
 use piston::input::*;
 use piston::window::WindowSettings;
 
-use astrostuff::game::App;
+use astrostuff::game::{App, GameOutcome};
 
 fn main() {
     let opengl = OpenGL::V3_2;
@@ -26,7 +26,13 @@ fn main() {
             app.render(&r);
         }
         if let Some(u) = e.update_args() {
-            app.update(u);
+            match app.update(u) {
+                GameOutcome::Win => (),
+                GameOutcome::Ongoing => (),
+                GameOutcome::Lose => {
+                    return;
+                }
+            }
         }
     }
 }
